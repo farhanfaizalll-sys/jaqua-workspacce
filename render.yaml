@@ -1,9 +1,3 @@
-databases:
-  - name: jaqua-db
-    plan: free
-    databaseName: jaqua
-    user: jaqua
-
 services:
   - type: web
     name: jaqua-backend
@@ -22,15 +16,12 @@ services:
         value: --dns-result-order=ipv4first
       - key: NODE_VERSION
         value: 20.18.0
-      # Internal connectionString only works when the DB is in the same
-      # region as this service (Singapore). If jaqua-db ends up in a
-      # different region, set this manually in the Render dashboard to the
-      # DB's EXTERNAL URL (jaqua-db -> Connections -> External Database URL),
-      # with ?sslmode=require appended — same issue larvix-backend hit.
+      # Database pakai Neon.tech (eksternal, gratis) - bukan Render Postgres,
+      # karena akun ini cuma boleh 1 database gratis di Render (sudah kepakai
+      # larvix-db). Isi manual di Render dashboard dengan connection string
+      # dari Neon (sudah termasuk ?sslmode=require dari Neon sendiri).
       - key: DATABASE_URL
-        fromDatabase:
-          name: jaqua-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
