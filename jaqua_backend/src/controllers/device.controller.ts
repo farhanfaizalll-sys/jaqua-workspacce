@@ -32,8 +32,13 @@ export const createDevice = asyncHandler(async (req: Request, res: Response) => 
 });
 
 // GET /api/devices/:id  (requires auth)
+// Piggybacks a SETTIME command every time the dashboard loads/refreshes
+// (polled every 15s while open, see dashboard_screen.dart) so the pond
+// unit's RTC stays corrected continuously without a manual trigger — this
+// is what makes the automatic feed schedule reliable.
 export const getDevice = asyncHandler(async (req: Request, res: Response) => {
   const device = await requireOwnedDevice(req.user!.id, req.params.id);
+  publishCommand(device.deviceCode, `SETTIME,${waktuWibSekarang()}`);
   res.json({ data: device });
 });
 
