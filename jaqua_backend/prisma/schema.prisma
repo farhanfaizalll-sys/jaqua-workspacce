@@ -1,0 +1,112 @@
+// Prisma schema for the Jaqua backend.
+// Run `npx prisma migrate dev` to create/apply migrations locally.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FeedTrigger {
+  SCHEDULE
+  MANUAL
+}
+
+// ─── Models ─────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  devices Device[]
+
+  @@map("users")
+}
+
+// One row per physical pond unit. `deviceCode` is the segment used in the
+// MQTT topics the Gateway publishes/subscribes to:
+//   data:    jaqua/{deviceCode}/data   (pond unit -> gateway -> broker)
+//   command: jaqua/{deviceCode}/cmd    (app -> broker -> gateway -> pond unit via LoRa)
+// `lastSuhu`/`lastLevelPeletPersen`/`lastSeenAt` are a cached "latest reading"
+// so the dashboard can show current status with a single row read instead of
+// querying SensorReading for the max(recordedAt) every time.
+model Device {
+  id                   String    @id @default(uuid())
+  userId               String
+  name                 String
+  deviceCode           String    @unique
+  isOn                 Boolean   @default(true)
+  lastSuhu             Float?
+  lastLevelPeletPersen Float?
+  lastSeenAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readings  SensorReading[]
+  schedules FeedSchedule[]
+  feedEvents FeedEvent[]
+
+  @@index([userId])
+  @@map("devices")
+}
+
+// One row per periodic sensor reading forwarded by the Gateway ("DATA,<suhu>,<level>").
+model SensorReading {
+  id               String   @id @default(uuid())
+  deviceId         String
+  suhu             Float
+  levelPeletPersen Float
+  recordedAt       DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, recordedAt])
+  @@map("sensor_readings")
+}
+
+// User-configured feeding times. Pushed to the pond unit as a command
+// (jaqua/{deviceCode}/cmd) whenever changed — see mqtt.service.ts.
+model FeedSchedule {
+  id        String   @id @default(uuid())
+  deviceId  String
+  jam       Int // 0-23
+  menit     Int // 0-59
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@map("feed_schedules")
+}
+
+// One row per feeding event, whether triggered by the device's own schedule
+// ("EVENT,FEED" forwarded via LoRa/MQTT) or a manual "feed now" tap in the app.
+model FeedEvent {
+  id          String      @id @default(uuid())
+  deviceId    String
+  triggeredBy FeedTrigger
+  createdAt   DateTime    @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, createdAt])
+  @@map("feed_events")
+}

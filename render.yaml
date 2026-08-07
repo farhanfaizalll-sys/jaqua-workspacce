@@ -1,0 +1,45 @@
+databases:
+  - name: jaqua-db
+    plan: free
+    databaseName: jaqua
+    user: jaqua
+
+services:
+  - type: web
+    name: jaqua-backend
+    runtime: node
+    rootDir: jaqua_backend
+    plan: free
+    region: singapore
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_OPTIONS
+        value: --dns-result-order=ipv4first
+      - key: NODE_VERSION
+        value: 20.18.0
+      # Internal connectionString only works when the DB is in the same
+      # region as this service (Singapore). If jaqua-db ends up in a
+      # different region, set this manually in the Render dashboard to the
+      # DB's EXTERNAL URL (jaqua-db -> Connections -> External Database URL),
+      # with ?sslmode=require appended — same issue larvix-backend hit.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jaqua-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Public broker for early hardware bring-up — swap for a private
+      # broker + credentials before real deployment (see .env.example).
+      - key: MQTT_BROKER_URL
+        value: "mqtt://broker.emqx.io:1883"
+      - key: MQTT_USERNAME
+        sync: false
+      - key: MQTT_PASSWORD
+        sync: false
