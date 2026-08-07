@@ -39,6 +39,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
   }
 
+  void _showGagalKirim() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal terhubung ke server, coba lagi')),
+      );
+    }
+  }
+
   Future<void> _addSchedule() async {
     final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (time == null) return;
@@ -47,6 +55,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _load();
     } on ApiException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      _showGagalKirim();
     }
   }
 
@@ -61,6 +71,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     } on ApiException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
       _load();
+    } catch (_) {
+      _showGagalKirim();
+      _load();
     }
   }
 
@@ -70,6 +83,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _load();
     } on ApiException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      _showGagalKirim();
     }
   }
 

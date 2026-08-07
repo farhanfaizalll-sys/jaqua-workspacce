@@ -62,6 +62,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) setState(() => _device = updated);
     } on ApiException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      // Jaringan/timeout/dll — dulu gagal diam-diam di sini, sekarang selalu
+      // dikasih tahu supaya jelas harus coba lagi, bukan kelihatan "nyangkut".
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal terhubung ke server, coba lagi')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _togglingPower = false);
     }
@@ -78,6 +86,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } on ApiException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal terhubung ke server, coba lagi')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _feeding = false);
     }
