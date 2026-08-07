@@ -50,6 +50,22 @@ export const setPower = asyncHandler(async (req: Request, res: Response) => {
   res.json({ message: `Device turned ${isOn ? 'on' : 'off'}`, data: updated });
 });
 
+// "YYYY,M,D,H,MM,SS" in WIB (UTC+7, fixed - Jaqua currently only deployed in
+// Indonesia). Piggybacked onto FEED_NOW so the pond unit's RTC gets corrected
+// opportunistically every time someone triggers a feed from the app, instead
+// of needing a separate manual USB step.
+function waktuWibSekarang(): string {
+  const wib = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  return [
+    wib.getUTCFullYear(),
+    wib.getUTCMonth() + 1,
+    wib.getUTCDate(),
+    wib.getUTCHours(),
+    wib.getUTCMinutes(),
+    wib.getUTCSeconds(),
+  ].join(',');
+}
+
 // POST /api/devices/:id/feed-now  (requires auth)
 // Manual "feed now" outside the schedule. Recorded immediately (optimistic —
 // there is no ack path from the hardware yet) and published as a command.
@@ -59,7 +75,7 @@ export const feedNow = asyncHandler(async (req: Request, res: Response) => {
   const feedEvent = await prisma.feedEvent.create({
     data: { deviceId: device.id, triggeredBy: 'MANUAL' },
   });
-  publishCommand(device.deviceCode, 'FEED_NOW');
+  publishCommand(device.deviceCode, `FEED_NOW,${waktuWibSekarang()}`);
 
   res.status(201).json({ message: 'Feed command sent', data: feedEvent });
 });

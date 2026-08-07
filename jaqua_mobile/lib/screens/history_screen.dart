@@ -178,18 +178,17 @@ class _FeedEventsTabState extends State<_FeedEventsTab> {
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (_, i) {
           final e = _events[i];
-          final manual = e.triggeredBy == 'MANUAL';
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppTheme.radiusSm), boxShadow: AppTheme.cardShadow),
             child: Row(
               children: [
-                Icon(manual ? Icons.touch_app : Icons.schedule, color: manual ? AppTheme.accent : AppTheme.primary),
+                const Icon(Icons.restaurant, color: AppTheme.primary),
                 const SizedBox(width: 12),
-                Expanded(
+                const Expanded(
                   child: Text(
-                    manual ? 'Diberi pakan manual' : 'Pakan otomatis (jadwal)',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textDark),
+                    'Pemberian pakan',
+                    style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textDark),
                   ),
                 ),
                 Text(DateFormat('dd MMM HH:mm').format(e.createdAt.toLocal()), style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
