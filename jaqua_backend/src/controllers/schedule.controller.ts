@@ -5,8 +5,18 @@ import { publishCommand } from '../services/mqtt.service';
 import { requireOwnedDevice, scheduleSyncCommand } from '../services/device.service';
 import { CreateScheduleInput, UpdateScheduleInput } from '../validators/device.validator';
 
+// LoRa (and the public broker.emqx.io broker it rides on) drops packets
+// often enough that a single publish isn't reliable — send the same
+// SCHEDULE command 3x with a short gap. Safe to repeat since applying the
+// same schedule twice is a no-op on the pond unit (unlike FEED_NOW, which
+// must NEVER be retried this way or it'd feed multiple times).
 async function syncScheduleToDevice(deviceId: string, deviceCode: string): Promise<void> {
-  publishCommand(deviceCode, await scheduleSyncCommand(deviceId));
+  const command = await scheduleSyncCommand(deviceId);
+  publishCommand(deviceCode, command);
+  // Don't make the caller wait for the extra retries — respond as soon as
+  // the DB write + first publish are done, keep resending in background.
+  setTimeout(() => publishCommand(deviceCode, command), 700);
+  setTimeout(() => publishCommand(deviceCode, command), 1400);
 }
 
 // GET /api/devices/:deviceId/schedules  (requires auth)
