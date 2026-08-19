@@ -3,7 +3,11 @@ services:
     name: jaqua-backend
     runtime: node
     rootDir: jaqua_backend
-    plan: free
+    # Starter (paid) instead of free: free tier sleeps after ~15min idle,
+    # which risks missing MQTT data from the pond unit. Funded from RAB
+    # item "Sewa Cloud VPS" (ACC Rp450.000) — invoice/receipt description
+    # should say "Sewa hosting cloud untuk backend IoT", not literal "VPS".
+    plan: starter
     region: singapore
     buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
