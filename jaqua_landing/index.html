@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jaqua Smart AutoFeeder</title>
+<meta name="description" content="Jaqua membaca suhu air dan sisa pakan, lalu memberi makan kolam budidaya secara otomatis — bahkan di kolam yang tidak terjangkau WiFi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340;0,9..144,480;0,9..144,600;1,9..144,480&family=JetBrains+Mono:wght@400;500;600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pond-deep:#0E2622;
+    --pond-mid:#153630;
+    --pond-card:#1B4039;
+    --water-ripple:#2F6E63;
+    --solar-amber:#E8A33D;
+    --solar-amber-soft:#F0C177;
+    --galengan-clay:#C97B4A;
+    --foam:#F3EFE4;
+    --foam-dim:#B9CBC4;
+    --line:rgba(232,163,61,0.18);
+    --display: 'Fraunces', serif;
+    --mono: 'JetBrains Mono', monospace;
+    --body: 'Work Sans', sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--pond-deep);
+    color:var(--foam);
+    font-family:var(--body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  img,svg{display:block; max-width:100%;}
+
+  a{color:inherit;}
+
+  :focus-visible{
+    outline:2px solid var(--solar-amber);
+    outline-offset:3px;
+    border-radius:2px;
+  }
+
+  .wrap{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 clamp(1.25rem, 4vw, 3rem);
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--solar-amber);
+    display:inline-block;
+    margin-bottom:1rem;
+  }
+
+  h1,h2,h3{
+    font-family:var(--display);
+    font-weight:480;
+    color:var(--foam);
+    line-height:1.08;
+  }
+
+  em{
+    font-style:italic;
+    color:var(--solar-amber-soft);
+  }
+
+  p{color:var(--foam-dim);}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(14,38,34,0.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:1.1rem clamp(1.25rem, 4vw, 3rem);
+    max-width:1120px;
+    margin:0 auto;
+  }
+
+  .wordmark{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:1.05rem;
+    letter-spacing:0.08em;
+    color:var(--foam);
+    display:flex;
+    align-items:baseline;
+    gap:0.6rem;
+  }
+
+  .wordmark .dot{color:var(--solar-amber);}
+
+  .wordmark small{
+    font-family:var(--body);
+    font-weight:500;
+    font-size:0.7rem;
+    letter-spacing:0.02em;
+    color:var(--foam-dim);
+    text-transform:none;
+  }
+
+  .btn{
+    font-family:var(--body);
+    font-weight:600;
+    font-size:0.92rem;
+    padding:0.7rem 1.4rem;
+    border-radius:999px;
+    border:1px solid transparent;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    transition:transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+  }
+
+  .btn-primary{
+    background:var(--solar-amber);
+    color:var(--pond-deep);
+  }
+  .btn-primary:hover{background:var(--solar-amber-soft); transform:translateY(-2px);}
+
+  .btn-ghost{
+    background:transparent;
+    color:var(--foam);
+    border-color:var(--water-ripple);
+  }
+  .btn-ghost:hover{border-color:var(--solar-amber); color:var(--solar-amber-soft); transform:translateY(-2px);}
+
+  .nav .btn{padding:0.6rem 1.2rem; font-size:0.85rem;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:clamp(4rem,9vw,7rem) 0 clamp(3.5rem,7vw,5.5rem);
+    overflow:hidden;
+  }
+
+  .pond-pattern{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0.55;
+    z-index:0;
+  }
+
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(60% 70% at 20% 30%, rgba(14,38,34,0.94) 0%, rgba(14,38,34,0.55) 45%, rgba(14,38,34,0.15) 75%),
+      linear-gradient(180deg, rgba(14,38,34,0.15) 0%, var(--pond-deep) 100%);
+    z-index:1;
+  }
+
+  .hero .wrap{position:relative; z-index:2;}
+
+  .hero-content{max-width:640px;}
+
+  .hero h1{
+    font-size:clamp(2.5rem, 4.4vw + 1rem, 4.2rem);
+    margin-bottom:1.3rem;
+    letter-spacing:-0.01em;
+  }
+
+  .hero p.lead{
+    font-size:clamp(1.02rem, 0.4vw + 1rem, 1.2rem);
+    max-width:52ch;
+    margin-bottom:2.1rem;
+  }
+
+  .ticker{
+    font-family:var(--mono);
+    font-size:0.82rem;
+    color:var(--foam-dim);
+    background:rgba(21,54,48,0.7);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:0.9rem 1.1rem;
+    display:inline-flex;
+    flex-wrap:wrap;
+    gap:0.5rem 0.9rem;
+    margin-bottom:2.3rem;
+    max-width:100%;
+  }
+
+  .ticker span.val{color:var(--solar-amber-soft); font-weight:500;}
+  .ticker .sep{color:var(--water-ripple);}
+
+  .cta-row{display:flex; flex-wrap:wrap; gap:0.9rem;}
+
+  /* ---------- Reveal ---------- */
+  .reveal{
+    opacity:0;
+    transform:translateY(18px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .reveal.visible{opacity:1; transform:translateY(0);}
+
+  /* ---------- Section shared ---------- */
+  section{padding:clamp(3.5rem,7vw,6rem) 0;}
+
+  .section-head{max-width:640px; margin-bottom:clamp(2rem,4vw,3rem);}
+  .section-head h2{font-size:clamp(1.7rem, 2vw + 1rem, 2.5rem);}
+
+  /* ---------- Masalah ---------- */
+  .masalah{border-top:1px solid var(--line);}
+
+  .masalah-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1.25rem;
+  }
+
+  .masalah-item{
+    background:var(--pond-mid);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:1.6rem 1.5rem;
+  }
+
+  .masalah-item .num{
+    font-family:var(--mono);
+    color:var(--galengan-clay);
+    font-size:0.85rem;
+    display:block;
+    margin-bottom:0.9rem;
+  }
+
+  .masalah-item p{color:var(--foam); font-size:1rem;}
+
+  /* ---------- Cara Kerja ---------- */
+  .cara-kerja{background:var(--pond-mid); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1.25rem;
+  }
+
+  .step{position:relative; padding-top:0.4rem;}
+
+  .step .idx{
+    font-family:var(--mono);
+    font-size:0.95rem;
+    color:var(--solar-amber);
+    display:block;
+    margin-bottom:0.9rem;
+    padding-bottom:0.9rem;
+    border-bottom:1px solid var(--line);
+  }
+
+  .step p{color:var(--foam); font-size:0.98rem;}
+
+  /* ---------- Perangkat ---------- */
+  .perangkat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.5rem;
+  }
+
+  .device-card{
+    background:var(--pond-card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:clamp(1.6rem,3vw,2.2rem);
+  }
+
+  .device-card h3{
+    font-size:1.05rem;
+    font-family:var(--mono);
+    font-weight:600;
+    letter-spacing:0.04em;
+    color:var(--solar-amber-soft);
+    text-transform:uppercase;
+    margin-bottom:1.4rem;
+  }
+
+  .device-card ul{list-style:none;}
+
+  .device-card li{
+    display:flex;
+    gap:0.7rem;
+    padding:0.65rem 0;
+    border-top:1px solid var(--line);
+    color:var(--foam);
+    font-size:0.96rem;
+  }
+  .device-card li:first-of-type{border-top:none;}
+
+  .device-card li::before{
+    content:"—";
+    color:var(--water-ripple);
+    flex-shrink:0;
+  }
+
+  /* ---------- Energi ---------- */
+  .energi{border-top:1px solid var(--line);}
+
+  .energi-inner{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:clamp(2rem,4vw,3.5rem);
+    align-items:center;
+  }
+
+  .energi h2{font-size:clamp(1.7rem,2vw + 1rem,2.4rem); margin-bottom:1rem;}
+  .energi p{max-width:48ch; margin-bottom:1.6rem;}
+
+  .chips{display:flex; flex-wrap:wrap; gap:0.6rem;}
+
+  .chip{
+    font-family:var(--mono);
+    font-size:0.78rem;
+    color:var(--foam);
+    background:var(--pond-mid);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:0.5rem 0.9rem;
+  }
+
+  .sun-bar{
+    background:var(--pond-mid);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:1.8rem;
+  }
+
+  .sun-bar .label{
+    font-family:var(--mono);
+    font-size:0.75rem;
+    color:var(--foam-dim);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-bottom:0.9rem;
+    display:block;
+  }
+
+  .sun-bar .bar{
+    height:10px;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--solar-amber) 0%, var(--solar-amber-soft) 45%, var(--water-ripple) 100%);
+    margin-bottom:0.9rem;
+  }
+
+  .sun-bar .caption{font-size:0.86rem; color:var(--foam-dim);}
+
+  /* ---------- Untuk Siapa ---------- */
+  .untuk-siapa{background:var(--pond-mid); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+
+  .siapa-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1.25rem;
+  }
+
+  .siapa-card{
+    background:var(--pond-card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:1.7rem 1.5rem;
+  }
+
+  .siapa-card h3{
+    font-family:var(--body);
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--foam);
+    margin-bottom:0.6rem;
+  }
+
+  .siapa-card p{font-size:0.95rem;}
+
+  /* ---------- Kontak ---------- */
+  .kontak{text-align:left;}
+  .kontak-inner{max-width:600px;}
+  .kontak h2{font-size:clamp(1.9rem,2.6vw + 1rem,2.8rem); margin-bottom:1rem;}
+  .kontak p{margin-bottom:1.8rem; font-size:1.05rem;}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--line);
+    padding:2.2rem 0;
+  }
+
+  .footer-inner{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    gap:0.8rem;
+    font-family:var(--mono);
+    font-size:0.76rem;
+    color:var(--foam-dim);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px){
+    .masalah-grid{grid-template-columns:1fr;}
+    .steps{grid-template-columns:1fr 1fr;}
+    .perangkat-grid{grid-template-columns:1fr;}
+    .energi-inner{grid-template-columns:1fr;}
+    .siapa-grid{grid-template-columns:1fr;}
+  }
+
+  @media (max-width:560px){
+    .steps{grid-template-columns:1fr;}
+    .nav .btn span.long{display:none;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important; scroll-behavior:auto !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="wordmark">JAQUA<span class="dot">.</span><small>Smart AutoFeeder</small></div>
+    <a class="btn btn-primary" href="https://www.instagram.com/jaqua.id" target="_blank" rel="noopener"><span class="long">Hubungi</span> Kami</a>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <svg class="pond-pattern" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="ponds" width="150" height="96" patternUnits="userSpaceOnUse">
+          <rect width="150" height="96" fill="#153630"/>
+          <rect x="4" y="4" width="64" height="40" fill="#1B4039"/>
+          <rect x="76" y="4" width="70" height="40" fill="#193B34"/>
+          <rect x="4" y="52" width="142" height="40" fill="#1E463E"/>
+          <path d="M0 2 H150 M0 48 H150 M0 94 H150 M2 0 V96 M72 0 V96" stroke="#E8A33D" stroke-opacity="0.16" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#ponds)"/>
+    </svg>
+
+    <div class="wrap">
+      <div class="hero-content">
+        <span class="eyebrow">Jaqua Smart AutoFeeder</span>
+        <h1>Kolam yang <em>mengabari dirinya sendiri.</em></h1>
+        <p class="lead">Jaqua membaca suhu air dan sisa pakan, lalu memberi makan tepat waktu — dari kolam yang bahkan tidak terjangkau WiFi.</p>
+
+        <div class="ticker" id="ticker">
+          SUHU AIR <span class="val" id="t-suhu">28.4°C</span>
+          <span class="sep">·</span> LEVEL PAKAN <span class="val" id="t-level">76%</span>
+          <span class="sep">·</span> SINYAL LoRa <span class="val">−82 dBm</span>
+          <span class="sep">·</span> terkirim <span class="val" id="t-detik">0 detik lalu</span>
+        </div>
+
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://www.instagram.com/jaqua.id" target="_blank" rel="noopener">Jadwalkan Demo</a>
+          <a class="btn btn-ghost" href="#cara-kerja">Lihat Cara Kerja</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="masalah">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Masalah di Lapangan</span>
+        <h2>Kolam sering luput dari perhatian, bukan karena lalai.</h2>
+      </div>
+      <div class="masalah-grid">
+        <div class="masalah-item reveal">
+          <span class="num">01</span>
+          <p>Kolam jauh dari rumah — jadwal pakan gampang telat atau kelewat.</p>
+        </div>
+        <div class="masalah-item reveal">
+          <span class="num">02</span>
+          <p>Sinyal WiFi tidak sampai ke tambak, jadi alat pintar biasa percuma dipasang.</p>
+        </div>
+        <div class="masalah-item reveal">
+          <span class="num">03</span>
+          <p>Sebagian area tambak belum teraliri listrik PLN.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cara-kerja" id="cara-kerja">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Cara Kerja</span>
+        <h2>Empat langkah, dari kolam sampai ke HP kamu.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <span class="idx">01</span>
+          <p>Alat di kolam membaca suhu air dan sisa pakan tiap beberapa detik.</p>
+        </div>
+        <div class="step reveal">
+          <span class="idx">02</span>
+          <p>Data dikirim lewat radio LoRa, tembus jarak jauh tanpa WiFi.</p>
+        </div>
+        <div class="step reveal">
+          <span class="idx">03</span>
+          <p>Gateway meneruskan data itu ke aplikasi Jaqua di HP kamu.</p>
+        </div>
+        <div class="step reveal">
+          <span class="idx">04</span>
+          <p>Pakan diberikan sesuai jadwal, atau tekan "Kasih Pakan Sekarang" kapan saja.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="perangkat">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Dua Perangkat, Satu Sistem</span>
+        <h2>Satu di kolam, satu di rumah.</h2>
+      </div>
+      <div class="perangkat-grid">
+        <div class="device-card reveal">
+          <h3>Alat di Kolam</h3>
+          <ul>
+            <li>Sensor suhu air</li>
+            <li>Sensor level pakan (ultrasonik)</li>
+            <li>Mekanisme pelontar pakan otomatis</li>
+            <li>Radio LoRa 433 MHz, jarak jauh</li>
+            <li>Tenaga surya + aki, mandiri energi</li>
+          </ul>
+        </div>
+        <div class="device-card reveal">
+          <h3>Gateway</h3>
+          <ul>
+            <li>Terima data dari kolam lewat LoRa</li>
+            <li>Tersambung WiFi &amp; internet</li>
+            <li>Teruskan data ke aplikasi Jaqua</li>
+            <li>Dipasang di rumah atau kantor terdekat</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="energi">
+    <div class="wrap">
+      <div class="energi-inner">
+        <div class="reveal">
+          <span class="eyebrow">Energi Mandiri</span>
+          <h2>Tidak nunggu PLN, tidak nunggu colokan.</h2>
+          <p>Alat di kolam berjalan sepenuhnya dari panel surya dan aki cadangan. Sekali pasang, jalan sendiri siang dan malam, hujan atau panas.</p>
+          <div class="chips">
+            <span class="chip">2× Panel Surya 30 WP</span>
+            <span class="chip">Aki 12V 20 Ah</span>
+            <span class="chip">±240 Wh cadangan energi</span>
+          </div>
+        </div>
+        <div class="sun-bar reveal">
+          <span class="label">Siklus Energi Harian</span>
+          <div class="bar"></div>
+          <p class="caption">Panel surya mengisi aki di siang hari, aki menopang alat sepanjang malam.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="untuk-siapa">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Untuk Siapa</span>
+        <h2>Dibangun buat yang kerja langsung di kolam.</h2>
+      </div>
+      <div class="siapa-grid">
+        <div class="siapa-card reveal">
+          <h3>Petambak Mandiri</h3>
+          <p>Satu-dua kolam yang dipantau sendiri, tanpa perlu bolak-balik tiap hari.</p>
+        </div>
+        <div class="siapa-card reveal">
+          <h3>Kelompok Tani / Pembudidaya</h3>
+          <p>Beberapa kolam sekaligus, jadwal pakan tetap konsisten walau bergantian jaga.</p>
+        </div>
+        <div class="siapa-card reveal">
+          <h3>Dinas &amp; Program Binaan</h3>
+          <p>Data suhu dan pakan yang bisa dipantau dan dilaporkan, bukan cuma catatan manual.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kontak" id="kontak">
+    <div class="wrap">
+      <div class="kontak-inner reveal">
+        <span class="eyebrow">Hubungi Kami</span>
+        <h2>Mau coba Jaqua di kolam sendiri?</h2>
+        <p>Ceritakan kondisi kolam kamu, kami bantu lihat apakah Jaqua cocok dipasang di sana.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://www.instagram.com/jaqua.id" target="_blank" rel="noopener">Follow Instagram</a>
+          <a class="btn btn-ghost" href="mailto:jaquanesia.id@gmail.com">Kirim Email</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <span>JAQUA SMART AUTOFEEDER — PROGRAM PEMBINAAN MAHASISWA WIRAUSAHA (P2MW)</span>
+    <span>TIM: PUTRA ANUGRAH SYAILENDRADONI · FARHAN FAIZAL NUR AZMI · HAKKA HIBANI MUSA</span>
+  </div>
+</footer>
+
+<script>
+  // Live telemetry ticker — mirrors the real device's 5-second report interval
+  (function(){
+    var suhuEl = document.getElementById('t-suhu');
+    var levelEl = document.getElementById('t-level');
+    var secEl = document.getElementById('t-detik');
+    var suhu = 28.4, level = 76, sec = 0;
+
+    setInterval(function(){
+      sec++;
+      if(sec >= 5){
+        sec = 0;
+        suhu = Math.round((suhu + (Math.random()*0.4 - 0.2)) * 10) / 10;
+        level = Math.max(0, Math.min(100, Math.round(level + (Math.random()*2 - 1))));
+        suhuEl.textContent = suhu.toFixed(1) + '°C';
+        levelEl.textContent = level + '%';
+      }
+      secEl.textContent = sec + ' detik lalu';
+    }, 1000);
+  })();
+
+  // Scroll reveal
+  (function(){
+    var items = document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){
+      items.forEach(function(el){ el.classList.add('visible'); });
+      return;
+    }
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.15});
+    items.forEach(function(el){ obs.observe(el); });
+  })();
+</script>
+
+</body>
+</html>
