@@ -396,6 +396,16 @@
   .kontak-inner{max-width:600px;}
   .kontak h2{font-size:clamp(1.9rem,2.6vw + 1rem,2.8rem); margin-bottom:1rem;}
   .kontak p{margin-bottom:1.8rem; font-size:1.05rem;}
+  .kontak-email-fallback{
+    margin:1.1rem 0 0;
+    font-size:0.88rem;
+    color:var(--foam-dim);
+  }
+  .kontak-email-fallback .mono-email{
+    font-family:var(--mono);
+    color:var(--solar-amber-soft);
+    user-select:all;
+  }
 
   /* ---------- Footer ---------- */
   footer{
@@ -613,6 +623,7 @@
           <a class="btn btn-primary" href="https://www.instagram.com/jaqua.id" target="_blank" rel="noopener">Follow Instagram</a>
           <a class="btn btn-ghost" href="mailto:jaquanesia.id@gmail.com">Kirim Email</a>
         </div>
+        <p class="kontak-email-fallback">atau kirim langsung ke <span class="mono-email">jaquanesia.id@gmail.com</span></p>
       </div>
     </div>
   </section>
